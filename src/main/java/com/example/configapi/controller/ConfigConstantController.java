@@ -1,55 +1,47 @@
 package com.example.configapi.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.example.configapi.model.ConfigConstant;
 import com.example.configapi.service.ConfigConstantService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/constants")
+@RequestMapping("/configurations")
 public class ConfigConstantController {
 
-	@Autowired
-	private ConfigConstantService service;
+	private final ConfigConstantService service;
+
+	public ConfigConstantController(ConfigConstantService service) {
+		this.service = service;
+	}
 
 	@GetMapping
-	public List<ConfigConstant> getAll() {
-		return service.getAll();
-	}
+    public List<ConfigConstant> getAll() {
+        return service.getAll();
+    }
 
-	@GetMapping("/{id}")
-	public ConfigConstant getById(@PathVariable Long id) {
-		return service.getById(id);
-	}
+    @GetMapping("/by-name-env")
+    public ResponseEntity<ConfigConstant> getByNameAndEnv(@RequestParam String name, @RequestParam String env) {
+        return service.getByNameAndEnvironment(name, env)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-	@PostMapping
-	public ConfigConstant create(@RequestBody ConfigConstant constant) {
-		return service.create(constant);
-	}
+    @PostMapping
+    public ResponseEntity<ConfigConstant> create(@RequestBody ConfigConstant prop) {
+        return ResponseEntity.ok(service.create(prop));
+    }
 
-	@PutMapping("/{id}")
-	public ConfigConstant update(@PathVariable Long id, @RequestBody ConfigConstant constant) {
-		return service.update(id, constant);
-	}
+    @PutMapping("/{id}")
+    public ResponseEntity<ConfigConstant> update(@PathVariable Long id, @RequestBody ConfigConstant prop) {
+        return ResponseEntity.ok(service.update(id, prop));
+    }
 
-	@DeleteMapping("/{id}")
-	public void delete(@PathVariable Long id) {
-		service.delete(id);
-	}
-
-	@GetMapping("/by-name-env")
-	public ConfigConstant getByNameAndEnv(@RequestParam String name, @RequestParam String environment) {
-		return service.getByNameAndEnvironment(name, environment);
-	}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

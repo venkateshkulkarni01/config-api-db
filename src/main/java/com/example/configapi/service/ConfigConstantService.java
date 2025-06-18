@@ -1,8 +1,9 @@
 package com.example.configapi.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.configapi.model.ConfigConstant;
@@ -11,33 +12,39 @@ import com.example.configapi.repository.ConfigConstantRepository;
 @Service
 public class ConfigConstantService {
 
-	@Autowired
-	private ConfigConstantRepository repository;
+	private final ConfigConstantRepository repository;
+
+	public ConfigConstantService(ConfigConstantRepository repository) {
+		this.repository = repository;
+	}
 
 	public List<ConfigConstant> getAll() {
 		return repository.findAll();
 	}
 
-	public ConfigConstant getById(Long id) {
-		return repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+	public Optional<ConfigConstant> getById(Long id) {
+		return repository.findById(id);
 	}
 
-	public ConfigConstant create(ConfigConstant constant) {
-		return repository.save(constant);
+	public Optional<ConfigConstant> getByNameAndEnvironment(String name, String env) {
+		return repository.findByConstantNameAndEnvironment(name, env);
 	}
 
-	public ConfigConstant getByNameAndEnvironment(String name, String environment) {
-		return repository.findByConstantNameAndEnvironment(name, environment).orElseThrow(() -> new RuntimeException(
-				"Configuration not found for name: " + name + " and environment: " + environment));
+	public ConfigConstant create(ConfigConstant prop) {
+		prop.setCreatedAt(LocalDateTime.now());
+		prop.setUpdatedAt(LocalDateTime.now());
+		return repository.save(prop);
 	}
 
 	public ConfigConstant update(Long id, ConfigConstant updated) {
-		ConfigConstant existing = getById(id);
-		existing.setConstantName(updated.getConstantName());
-		existing.setConstantValue(updated.getConstantValue());
-		existing.setEnvironment(updated.getEnvironment());
-		existing.setDescription(updated.getDescription());
-		return repository.save(existing);
+		return repository.findById(id).map(existing -> {
+			existing.setConstantName(updated.getConstantName());
+			existing.setConstantValue(updated.getConstantValue());
+			existing.setEnvironment(updated.getEnvironment());
+			existing.setDescription(updated.getDescription());
+			existing.setUpdatedAt(LocalDateTime.now());
+			return repository.save(existing);
+		}).orElseThrow(() -> new RuntimeException("Configuration not found with ID: " + id));
 	}
 
 	public void delete(Long id) {

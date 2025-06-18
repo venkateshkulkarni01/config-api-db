@@ -8,5 +8,4 @@ import com.example.configapi.model.ConfigConstant;
 
 public interface ConfigConstantRepository extends JpaRepository<ConfigConstant, Long> {
 	Optional<ConfigConstant> findByConstantNameAndEnvironment(String constantName, String environment);
-
 }
